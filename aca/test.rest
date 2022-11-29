@@ -1,0 +1,28 @@
+# container copy
+POST https://localhost:7179/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "test2/auth4.gif",
+  "sourceContainer": "testdir",
+  "targetContainer": "01k",
+  "requestType": "c"
+}
+
+###
+# single blob copy
+POST https://localhost:7179/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "test2/auth4.gif",
+  "sourceContainer": "testdir",
+  "targetContainer": "01k",
+  "requestType": "b"
+}
