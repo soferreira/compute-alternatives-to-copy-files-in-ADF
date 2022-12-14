@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         container = "samplesourcefiles"
     # Download the default sample file:
     if not url:
-        url = "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/create_source_files/daily.data"
+        url = "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data"
     urllib.request.urlretrieve(url, "daily.data")
 
     # Create a BlobServiceClient object
