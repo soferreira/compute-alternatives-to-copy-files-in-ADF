@@ -1,0 +1,8 @@
+POST  http://localhost:7071/api/func_upload_sample_files
+
+{
+    "files": 5,
+    "container": "test",
+    "connection_string": "<your_connection_string>"
+
+}
