@@ -63,7 +63,7 @@ public class BlobController : ControllerBase
             // _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");
             // localBlob.StartCopyFromUri(uri);          
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples. copy started");  
-            await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+            await CreateSample(localBlob,targetBlobClient,item.SampleSize,sas);
             
             // creating data samples
             return $"Created {item.SampleSize} samples in {item.TargetContainer} ";
@@ -83,12 +83,13 @@ public class BlobController : ControllerBase
 
    
 
-    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize)
+    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize, string sas)
     {
         for (int i = 0; i < sampleSize; i++)
         {
-            BlobClient destBlob = destBlobContainer.GetBlobClient($"datafile{i}.json");
-            await destBlob.StartCopyFromUriAsync(localBlob.Uri);
+            await CopySingle(localBlob,destBlobContainer.GetBlobClient($"datafile{i}.json"),sas);
+            // BlobClient destBlob = destBlobContainer.GetBlobClient($"datafile{i}.json");
+            // await destBlob.StartCopyFromUriAsync(localBlob.Uri);
         }
     }
 
