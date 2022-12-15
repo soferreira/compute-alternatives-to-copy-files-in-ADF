@@ -29,25 +29,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Download the default sample file:
     if not url:
         url = "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data"
-    #urllib.request.urlretrieve(url, "daily.data")
+    #urllib.request.urlretrieve(url, "daily.data")  # not working in Azure Function (read-only?)
 
-    # Send an HTTP GET request to the file URL
-    response = urllib.request.urlopen(url)
-
-    # Write the file to the local file system
-    with open("daily.data", "wb") as f:
-        f.write(response.read())
 
     # Create a BlobServiceClient object
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    # Create a ContainerClient object to interact with the container
+    container_client = blob_service_client.get_container_client(container)
+
+    # Check if the container exists, if not create it
+    if not container_client.exists():
+        container_client = blob_service_client.create_container(container)
 
     # Create the number of files requested in the container
     for _ in range(number_of_files):
         file_name = f'/{number_of_files}k-unzip/daily-{uuid.uuid4()}.data'
-        container_client = blob_service_client.get_container_client(container)
         blob_client = container_client.get_blob_client(blob=file_name)
-        with open(file=os.path.join(Path.cwd(), "daily.data"), mode="rb") as data:
-            blob_client.upload_blob(data)
+        blob_client.upload_blob_from_url(url)
 
     # Return a 200 OK response
     return func.HttpResponse(
