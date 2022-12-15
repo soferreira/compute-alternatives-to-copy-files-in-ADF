@@ -58,10 +58,10 @@ public class BlobController : ControllerBase
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples. local blob client created");
-            BlobClient localBlob = localBlobClient.GetBlobClient("datafile.json");
-            Uri uri = new Uri(sampleFileUri);
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");
-            localBlob.StartCopyFromUri(uri);          
+            BlobClient localBlob = localBlobClient.GetBlobClient("temp.data");
+            // Uri uri = new Uri(sampleFileUri);
+            // _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");
+            // localBlob.StartCopyFromUri(uri);          
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples. copy started");  
             await CreateSample(localBlob,targetBlobClient,item.SampleSize);
             
