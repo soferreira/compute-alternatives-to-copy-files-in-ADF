@@ -29,7 +29,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Download the default sample file:
     if not url:
         url = "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data"
-    urllib.request.urlretrieve(url, "daily.data")
+    #urllib.request.urlretrieve(url, "daily.data")
+
+    # Send an HTTP GET request to the file URL
+    response = urllib.request.urlopen(url)
+
+    # Write the file to the local file system
+    with open("daily.data", "wb") as f:
+        f.write(response.read())
 
     # Create a BlobServiceClient object
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
