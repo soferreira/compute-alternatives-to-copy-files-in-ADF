@@ -55,14 +55,18 @@ public class BlobController : ControllerBase
             await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
             return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType)){
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
-            BlobClient localBlob = localBlobClient.GetBlobClient("datafile.json");
-            Uri uri = new Uri(sampleFileUri);
-            await localBlob.StartCopyFromUriAsync(uri);            
-            await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. local blob client created");
+            BlobClient localBlob = localBlobClient.GetBlobClient("temp.data");
+            // Uri uri = new Uri(sampleFileUri);
+            // _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");
+            // localBlob.StartCopyFromUri(uri);          
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. copy started");  
+            await CreateSample(localBlob,targetBlobClient,item.SampleSize,sas);
             
             // creating data samples
-            return "Invalid input provided. ";
+            return $"Created {item.SampleSize} samples in {item.TargetContainer} ";
         }else{
             
             // wrong type passed
@@ -79,12 +83,13 @@ public class BlobController : ControllerBase
 
    
 
-    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize)
+    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize, string sas)
     {
         for (int i = 0; i < sampleSize; i++)
         {
-            BlobClient destBlob = destBlobContainer.GetBlobClient($"datafile{i}.json");
-            await destBlob.StartCopyFromUriAsync(localBlob.Uri);
+            await CopySingle(localBlob,destBlobContainer.GetBlobClient($"datafile{i}.json"),sas);
+            // BlobClient destBlob = destBlobContainer.GetBlobClient($"datafile{i}.json");
+            // await destBlob.StartCopyFromUriAsync(localBlob.Uri);
         }
     }
 
