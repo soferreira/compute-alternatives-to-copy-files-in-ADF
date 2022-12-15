@@ -55,14 +55,18 @@ public class BlobController : ControllerBase
             await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
             return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType)){
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. local blob client created");
             BlobClient localBlob = localBlobClient.GetBlobClient("datafile.json");
             Uri uri = new Uri(sampleFileUri);
-            await localBlob.StartCopyFromUriAsync(uri);            
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");
+            localBlob.StartCopyFromUri(uri);          
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. copy started");  
             await CreateSample(localBlob,targetBlobClient,item.SampleSize);
             
             // creating data samples
-            return "Invalid input provided. ";
+            return $"Created {item.SampleSize} samples in {item.TargetContainer} ";
         }else{
             
             // wrong type passed
