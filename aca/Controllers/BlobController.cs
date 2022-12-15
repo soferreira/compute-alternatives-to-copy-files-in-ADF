@@ -15,6 +15,9 @@ public class BlobController : ControllerBase
 
     const string BLOB = "b";
     const string CONTAINER = "c";
+    const string SAMPLE = "s";
+
+    const string TEMP_LOC = "tempContainer";
 
     public BlobController(ILogger<BlobController> logger, IConfiguration configuration)
     {
@@ -22,6 +25,7 @@ public class BlobController : ControllerBase
         _configuration = configuration;
     }
 
+   
 
     [HttpPost]
     public async Task<ActionResult<string>> CopyBlob(BlobRequest item)
@@ -29,9 +33,11 @@ public class BlobController : ControllerBase
         // validate inputs
         if(item.Validate())
         {
-        _logger.LogInformation($"BlobController::CopyBlob  {item.BlobName} starts");
+        _logger.LogInformation($"BlobController::CopyBlob with type: {item.RequestType} starts");
         string sourceCS = _configuration.GetValue<string>(item.SourceCS);
         string targetCS = _configuration.GetValue<string>(item.TargetCS);
+
+        string sampleFileUri = _configuration.GetValue<string>("SampleFileUri");
 
         BlobContainerClient sourceBlobClient = new BlobContainerClient(sourceCS,item.SourceContainer);
         BlobContainerClient targetBlobClient = new BlobContainerClient(targetCS,item.TargetContainer);
@@ -48,7 +54,17 @@ public class BlobController : ControllerBase
             // copy entire container
             await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
             return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
+        }else if(SAMPLE.Equals(item.RequestType)){
+            BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
+            BlobClient localBlob = localBlobClient.GetBlobClient("datafile.json");
+            Uri uri = new Uri(sampleFileUri);
+            await localBlob.StartCopyFromUriAsync(uri);            
+            await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+            
+            // creating data samples
+            return "Invalid input provided. ";
         }else{
+            
             // wrong type passed
             return "Invalid input provided. ";
         }
@@ -59,6 +75,17 @@ public class BlobController : ControllerBase
         }
         
 
+    }
+
+   
+
+    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize)
+    {
+        for (int i = 0; i < sampleSize; i++)
+        {
+            BlobClient destBlob = destBlobContainer.GetBlobClient($"datafile{i}.json");
+            await destBlob.StartCopyFromUriAsync(localBlob.Uri);
+        }
     }
 
     private async Task CopySingle(BlobClient sourceBlob,BlobClient destBlob, string sas)
