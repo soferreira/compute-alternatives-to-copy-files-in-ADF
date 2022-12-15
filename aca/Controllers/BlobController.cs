@@ -17,7 +17,7 @@ public class BlobController : ControllerBase
     const string CONTAINER = "c";
     const string SAMPLE = "s";
 
-    const string TEMP_LOC = "tempContainer";
+    const string TEMP_LOC = "sample";
 
     public BlobController(ILogger<BlobController> logger, IConfiguration configuration)
     {
@@ -51,23 +51,19 @@ public class BlobController : ControllerBase
             return $"Copied single blob {item.BlobName} from source:{item.SourceContainer}";
             // copy single file
         }else if(CONTAINER.Equals(item.RequestType)){
+            _logger.LogInformation($"BlobController::CopyBlob::Copy entire container content.");
             // copy entire container
             await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
             return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType) && !string.IsNullOrEmpty(item.BlobName)){
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");
-            // string sampleFIle = item.BlobName;
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");            
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. local blob client created");
-            BlobClient localBlob = localBlobClient.GetBlobClient("temp.data");
-            Uri uri = new Uri(item.BlobName);
-            
-            localBlob.StartCopyFromUri(uri);      
-             _logger.LogInformation($"BlobController::CopyBlob::Creating samples. uri created: {uri.AbsoluteUri}");    
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples. copy started");  
-            await CreateSample(localBlob,targetBlobClient,item.SampleSize,sas);
-            
-            // creating data samples
+            string localSas = GetServiceSasUriForContainer(localBlobClient);
+            BlobClient localBlob = localBlobClient.GetBlobClient("temp.data");            
+            Uri uri = new Uri(item.BlobName);            
+            localBlob.StartCopyFromUri(uri);     
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container started");  
+            await CreateSample(localBlob,targetBlobClient,item.SampleSize,localSas);               
             return $"Created {item.SampleSize} samples in {item.TargetContainer} ";
         }else{
             
@@ -90,19 +86,15 @@ public class BlobController : ControllerBase
         for (int i = 0; i < sampleSize; i++)
         {
             var tempfile = $"datafile{i}.json";
-            // await CopySingle(localBlob,destBlobContainer.GetBlobClient(tempfile),sas);
-            BlobClient destBlob = destBlobContainer.GetBlobClient(tempfile);
-            _logger.LogInformation($"BlobController::Creating sample {tempfile} from source:{localBlob.Uri.AbsoluteUri}");
-            await destBlob.StartCopyFromUriAsync(localBlob.Uri);
+            await CopySingle(localBlob,destBlobContainer.GetBlobClient(tempfile),sas);
+            _logger.LogInformation($"BlobController::Creating sample {tempfile} from source:{localBlob.Uri.AbsoluteUri}");            
         }
     }
 
     private async Task CopySingle(BlobClient sourceBlob,BlobClient destBlob, string sas)
     {
-        Uri uri = new Uri ($"{sourceBlob.Uri.AbsoluteUri}?{sas}");
-        //  _logger.LogInformation($"the uri is:{uri}");
-        await destBlob.StartCopyFromUriAsync(uri);
-        // _logger.LogInformation($"BlobController::Copied single blob {sourceBlob.Name}");
+        Uri uri = new Uri ($"{sourceBlob.Uri.AbsoluteUri}?{sas}");        
+        await destBlob.StartCopyFromUriAsync(uri);        
     }
 
     private async Task CopyContainer(BlobContainerClient sourceBlobClient, BlobContainerClient targetBlobClient,  int? segmentSize, string sas)
