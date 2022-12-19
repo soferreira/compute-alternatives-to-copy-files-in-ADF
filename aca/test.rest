@@ -26,3 +26,36 @@ Content-Type: application/json
   "targetContainer": "01k",
   "requestType": "b"
 }
+
+###
+# create sample
+POST https://second--21ksnzn.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data",
+  "sourceContainer": "testdir",
+  "targetContainer": "5stream",
+  "requestType": "s",
+  "sampleSize": 5000
+}
+
+
+### local
+
+POST https://localhost:7179/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data",
+  "sourceContainer": "testdir",
+  "targetContainer": "test",
+  "requestType": "s",
+  "SampleSize": 5
+}
