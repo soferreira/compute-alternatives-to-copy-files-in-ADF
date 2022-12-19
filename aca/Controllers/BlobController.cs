@@ -83,6 +83,7 @@ public class BlobController : ControllerBase
 
     private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize, string sas)
     {
+        // use the sample file as stream to create multiple files
         Stream content = localBlob.OpenRead();
         for (int i = 0; i < sampleSize; i++)
         {
