@@ -475,3 +475,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+aca/test.rest
+Program.cs.old
+.gitignore
+aca/test.rest
