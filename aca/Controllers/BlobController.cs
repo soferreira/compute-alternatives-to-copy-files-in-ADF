@@ -58,6 +58,7 @@ public class BlobController : ControllerBase
             // download the file to a temporary location (sample container)        
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
             string localSas = GetServiceSasUriForContainer(localBlobClient);
+            // using a unique name for the file
             string localFileTemp = Guid.NewGuid().ToString();
             BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
             Uri uri = new Uri(item.BlobName);            
