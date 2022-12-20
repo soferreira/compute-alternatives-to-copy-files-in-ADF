@@ -38,7 +38,9 @@ public class BlobController : ControllerBase
         string targetCS = _configuration.GetValue<string>(item.TargetCS);
       
         BlobContainerClient sourceBlobClient = new BlobContainerClient(sourceCS,item.SourceContainer);
+        sourceBlobClient.CreateIfNotExists();
         BlobContainerClient targetBlobClient = new BlobContainerClient(targetCS,item.TargetContainer);
+        targetBlobClient.CreateIfNotExists();
         string sas = GetServiceSasUriForContainer(sourceBlobClient);
         // create uri for the download
         if(BLOB.Equals(item.RequestType) && !string.IsNullOrEmpty(sas)){
@@ -58,6 +60,7 @@ public class BlobController : ControllerBase
             long btime = DateTime.Now.Ticks; 
             // download the file to a temporary location (sample container)        
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
+            localBlobClient.CreateIfNotExists();
             // using a unique name for the file
             string localFileTemp = Guid.NewGuid().ToString();
             BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
