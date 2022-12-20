@@ -54,18 +54,19 @@ public class BlobController : ControllerBase
             await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
             return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType) && !string.IsNullOrEmpty(item.BlobName)){
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");    
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");   
+            long btime = DateTime.Now.Ticks; 
             // download the file to a temporary location (sample container)        
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
-            string localSas = GetServiceSasUriForContainer(localBlobClient);
             // using a unique name for the file
             string localFileTemp = Guid.NewGuid().ToString();
             BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
             Uri uri = new Uri(item.BlobName);            
             localBlob.StartCopyFromUri(uri);     
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container started");  
-            await CreateSample(localBlob,targetBlobClient,item.SampleSize,localSas);               
-            return $"Created {item.SampleSize} samples in {item.TargetContainer} ";
+            await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+            long etime = DateTime.Now.Ticks;            
+            return $"Created {item.SampleSize} samples in {item.TargetContainer}, took {(etime-btime)/TimeSpan.TicksPerSecond} seconds ";
         }else{
             
             // wrong type passed
@@ -80,19 +81,22 @@ public class BlobController : ControllerBase
 
     }
 
-   
+    private string GenerateString(int length){
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        return new string(Enumerable.Repeat(chars, length)
+          .Select(s => s[new Random().Next(s.Length)]).ToArray());        
+    }
 
-    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize, string sas)
+    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize)
     {
         // use the sample file as stream to create multiple files
         Stream content = localBlob.OpenRead();
+        string prefix = GenerateString(5);
         for (int i = 0; i < sampleSize; i++)
         {
-            var tempfile = $"datafile{i}.json";
+            var tempfile = $"{prefix}-{i}.json";
             content.Position = 0;
             await destBlobContainer.GetBlobClient(tempfile).UploadAsync(content);
-            // await CopySingle(localBlob,destBlobContainer.GetBlobClient(tempfile),sas);
-            // _logger.LogInformation($"BlobController::Creating sample {tempfile} from source:{localBlob.Uri.AbsoluteUri}");            
         }
     }
 
