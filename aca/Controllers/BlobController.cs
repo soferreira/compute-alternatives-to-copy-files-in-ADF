@@ -13,16 +13,19 @@ public class BlobController : ControllerBase
     private readonly ILogger<BlobController> _logger;
     private IConfiguration _configuration;
 
+    private IBackgroundTaskQueue _queue;
+
     const string BLOB = "b";
     const string CONTAINER = "c";
     const string SAMPLE = "s";
 
     const string TEMP_LOC = "sample";
 
-    public BlobController(ILogger<BlobController> logger, IConfiguration configuration)
+    public BlobController(ILogger<BlobController> logger, IConfiguration configuration, IBackgroundTaskQueue queue)
     {
         _logger = logger;
         _configuration = configuration;
+        _queue = queue;
     }
 
    
@@ -52,12 +55,25 @@ public class BlobController : ControllerBase
             // copy single file
         }else if(CONTAINER.Equals(item.RequestType)){
             _logger.LogInformation($"BlobController::CopyBlob::Copy entire container content.");
+            // creating a background task
+            var workItem = new Func<CancellationToken, ValueTask>(async token =>
+                {
+                    _logger.LogInformation(
+                        $"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
+                    // do the copy here
+                    await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
+                    _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
+   
+                });
+            await _queue.QueueBackgroundWorkItemAsync(workItem);
+        
+            return Accepted($"Copy container task Created: {item.SourceContainer} to {item.TargetContainer}");
             // copy entire container
-            await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
-            return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
+            // await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
+            // return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType) && !string.IsNullOrEmpty(item.BlobName)){
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");   
-            long btime = DateTime.Now.Ticks; 
+            // long btime = DateTime.Now.Ticks; 
             // download the file to a temporary location (sample container)        
             BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
             localBlobClient.CreateIfNotExists();
@@ -66,10 +82,23 @@ public class BlobController : ControllerBase
             BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
             Uri uri = new Uri(item.BlobName);            
             localBlob.StartCopyFromUri(uri);     
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container started");  
-            await CreateSample(localBlob,targetBlobClient,item.SampleSize);
-            long etime = DateTime.Now.Ticks;            
-            return $"Created {item.SampleSize} samples in {item.TargetContainer}, took {(etime-btime)/TimeSpan.TicksPerSecond} seconds ";
+            _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container task starting.");  
+            // creating a background task
+            var workItem = new Func<CancellationToken, ValueTask>(async token =>
+                {
+                    _logger.LogInformation(
+                        $"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
+                    // do the copy here
+                    await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+                    _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
+   
+                });
+            await _queue.QueueBackgroundWorkItemAsync(workItem);
+        
+            return Accepted($"Sample task Created: creating {item.SampleSize} samples in {item.TargetContainer}");
+            
+            // long etime = DateTime.Now.Ticks;            
+            // return $"Created {item.SampleSize} samples in {item.TargetContainer}, took {(etime-btime)/TimeSpan.TicksPerSecond} seconds ";
         }else{
             
             // wrong type passed

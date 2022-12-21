@@ -1,14 +1,13 @@
 using Azure.Identity;
-// using Microsoft.AspNetCore.HttpOverrides;
 
-// using Microsoft.OpenApi.Models;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// // when running localy and your user is granted right rbac on the keyvault, u can use this:
+// when running localy and your user is granted right rbac on the keyvault, u can use this:
 // builder.Configuration.AddAzureKeyVault(
-//         new Uri($"https://{builder.Configuration["keyvault"]}.vault.azure.net/"),
+//         new Uri($"https://ext-lake-kv.vault.azure.net/"),
 //         new DefaultAzureCredential());
 
 builder.Configuration.AddAzureKeyVault(
@@ -20,6 +19,14 @@ builder.Configuration.AddAzureKeyVault(
 
 
 // Add services to the container.
+
+
+builder.Services.AddSingleton<IBackgroundTaskQueue>(ctx =>
+        {
+            return new BackgroundTaskQueue(100);
+        });
+
+builder.Services.AddHostedService<BackgroundWorker>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -12,6 +12,20 @@ Content-Type: application/json
   "requestType": "c"
 }
 
+### test background
+POST https://localhost:7179/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "test2/auth4.gif",
+  "sourceContainer": "1000files",
+  "targetContainer": "test1000",
+  "requestType": "c"
+}
+
 ###
 # single blob copy
 POST https://localhost:7179/api/Blob
@@ -40,7 +54,7 @@ Content-Type: application/json
   "sourceContainer": "testdir",
   "targetContainer": "5stream",
   "requestType": "s",
-  "sampleSize": 5000
+  "sampleSize": 500
 }
 
 
@@ -58,4 +72,20 @@ Content-Type: application/json
   "targetContainer": "test",
   "requestType": "s",
   "SampleSize": 5
+}
+
+### test aca
+
+POST https://second--80qa8q9.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "sourcecs",
+  "blobName": "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data",
+  "sourceContainer": "testdir",
+  "targetContainer": "batchingtest",
+  "requestType": "s",
+  "sampleSize": 200
 }
