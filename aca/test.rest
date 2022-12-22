@@ -66,17 +66,18 @@ Content-Type: application/json
 
 {
   "sourceCS": "sourcecs",
-  "targetCS": "targetcs",
+  "targetCS": "sourcecs",
   "blobName": "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data",
   "sourceContainer": "testdir",
-  "targetContainer": "test",
+  "targetContainer": "501500",
   "requestType": "s",
-  "SampleSize": 5
+  "SampleSize": 500,
+  "CallonUrl": "https://localhost:7179"
 }
 
 ### test aca
 
-POST https://second--80qa8q9.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
+POST https://second--s2cz39w.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
 accept: text/plain
 Content-Type: application/json
 
@@ -85,7 +86,28 @@ Content-Type: application/json
   "targetCS": "sourcecs",
   "blobName": "https://raw.githubusercontent.com/soferreira/copy-alternatives/main/sample_data/daily.data",
   "sourceContainer": "testdir",
-  "targetContainer": "batchingtest",
+  "targetContainer": "10files",
   "requestType": "s",
-  "sampleSize": 200
+  "sampleSize": 10000
 }
+
+###
+
+POST https://second--s2cz39w.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
+accept: text/plain
+Content-Type: application/json
+
+{
+  "sourceCS": "sourcecs",
+  "targetCS": "targetcs",
+  "blobName": "test2/auth4.gif",
+  "sourceContainer": "5000files",
+  "targetContainer": "aca5000",
+  "requestType": "c"
+}
+
+###
+
+POST https://second--s2cz39w.jollyrock-6da7e977.northeurope.azurecontainerapps.io/api/Blob
+accept: text/plain
+Content-Type: application/json

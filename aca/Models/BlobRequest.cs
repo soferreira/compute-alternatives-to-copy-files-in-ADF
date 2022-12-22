@@ -17,6 +17,8 @@ public class BlobRequest
     [Required]
     public string? RequestType { get; set;}
 
+    public string? CallonUrl { get; set; }
+
     public int SampleSize { get; set; }
 
     public bool Validate()

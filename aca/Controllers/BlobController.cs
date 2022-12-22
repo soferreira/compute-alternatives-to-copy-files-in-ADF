@@ -3,6 +3,9 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using Azure.Storage.Blobs.Models;
 using Azure;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace aca;
 
@@ -20,6 +23,8 @@ public class BlobController : ControllerBase
     const string SAMPLE = "s";
 
     const string TEMP_LOC = "sample";
+
+    const int MAX_SAMPLE_SIZE = 125;
 
     public BlobController(ILogger<BlobController> logger, IConfiguration configuration, IBackgroundTaskQueue queue)
     {
@@ -69,36 +74,55 @@ public class BlobController : ControllerBase
         
             return Accepted($"Copy container task Created: {item.SourceContainer} to {item.TargetContainer}");
             // copy entire container
-            // await CopyContainer(sourceBlobClient,targetBlobClient,5000,sas);
-            // return $"Copied container {item.SourceContainer} to {item.TargetContainer}";
         }else if(SAMPLE.Equals(item.RequestType) && !string.IsNullOrEmpty(item.BlobName)){
             _logger.LogInformation($"BlobController::CopyBlob::Creating samples.");   
-            // long btime = DateTime.Now.Ticks; 
-            // download the file to a temporary location (sample container)        
-            BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
-            localBlobClient.CreateIfNotExists();
-            // using a unique name for the file
-            string localFileTemp = Guid.NewGuid().ToString();
-            BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
-            Uri uri = new Uri(item.BlobName);            
-            localBlob.StartCopyFromUri(uri);     
-            _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container task starting.");  
-            // creating a background task
-            var workItem = new Func<CancellationToken, ValueTask>(async token =>
+            if(item.SampleSize > MAX_SAMPLE_SIZE){
+                _logger.LogInformation($"BlobController::Sample size {item.SampleSize} is bigger than threshold {MAX_SAMPLE_SIZE}, dividing by 2 and creating two tasks again.");
+                int newSize = item.SampleSize/2;
+                BlobRequest newItem = new BlobRequest();
+                newItem.CallonUrl = item.CallonUrl;
+                newItem.SourceCS = item.SourceCS;
+                newItem.TargetCS = item.TargetCS;
+                newItem.SourceContainer = item.SourceContainer;
+                newItem.SampleSize = newSize;
+                newItem.TargetContainer = item.TargetContainer;
+                newItem.BlobName = item.BlobName;
+                newItem.RequestType = SAMPLE;
+                var CallOnItem = new Func<CancellationToken, ValueTask>(async token =>
                 {
-                    _logger.LogInformation(
-                        $"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
+                    _logger.LogInformation($"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
                     // do the copy here
-                    await CreateSample(localBlob,targetBlobClient,item.SampleSize);
+                    await CallOn(newItem);
                     _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
    
                 });
-            await _queue.QueueBackgroundWorkItemAsync(workItem);
-        
-            return Accepted($"Sample task Created: creating {item.SampleSize} samples in {item.TargetContainer}");
-            
-            // long etime = DateTime.Now.Ticks;            
-            // return $"Created {item.SampleSize} samples in {item.TargetContainer}, took {(etime-btime)/TimeSpan.TicksPerSecond} seconds ";
+                await _queue.QueueBackgroundWorkItemAsync(CallOnItem);
+                newItem.SampleSize = item.SampleSize - newSize; // remaining size might not be even, so we need to calculate the remaining size
+                var CallOnItem2 = new Func<CancellationToken, ValueTask>(async token =>
+                {
+                    _logger.LogInformation($"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
+                    // do the copy here
+                    await CallOn(newItem);
+                    _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
+   
+                });
+                await _queue.QueueBackgroundWorkItemAsync(CallOnItem2);
+                return Accepted($"Sample task Created: {item.BlobName} with size {item.SampleSize}");
+            }else{
+                // download the file to a temporary location (sample container)        
+                BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
+                localBlobClient.CreateIfNotExists();
+                // using a unique name for the file
+                string localFileTemp = Guid.NewGuid().ToString();
+                BlobClient localBlob = localBlobClient.GetBlobClient(localFileTemp);            
+                Uri uri = new Uri(item.BlobName);            
+                localBlob.StartCopyFromUri(uri);     
+                _logger.LogInformation($"BlobController::CopyBlob::Creating samples::local copy completed - copy to designated container task starting.");  
+                // creating a background task
+                await CreateSample(localBlob,targetBlobClient,item);            
+                return Accepted($"Sample task Created: creating {item.SampleSize} samples in {item.TargetContainer}");
+            }
+
         }else{
             
             // wrong type passed
@@ -119,18 +143,37 @@ public class BlobController : ControllerBase
           .Select(s => s[new Random().Next(s.Length)]).ToArray());        
     }
 
-    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, int sampleSize)
+    private async Task CallOn(BlobRequest item)
+    {
+        string content = JsonConvert.SerializeObject(item);
+        // log the json content
+        _logger.LogInformation($"json item: {content}");
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
+
+        // HttpResponseMessage response = await client.PostAsJsonAsync($"{item.CallonUrl}/api/blob", content);
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{item.CallonUrl}/api/blob");
+        
+        request.Content = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
+        // _logger.LogInformation($"BlobController::CallOn::Calling {item.CallonUrl}/api/blob with size {item.SampleSize}");
+        HttpResponseMessage response = await client.SendAsync(request);
+        _logger.LogInformation($"BlobController::CallOn::Response {response.StatusCode} for size {item.SampleSize}");
+        client.Dispose();
+    }
+    private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, BlobRequest item)
     {
         // use the sample file as stream to create multiple files
+        _logger.LogInformation($"BlobController::CreateSample::Creating {item.SampleSize} samples in {item.TargetContainer}.");
         Stream content = localBlob.OpenRead();
         string prefix = GenerateString(5);
-        for (int i = 0; i < sampleSize; i++)
+        for (int i = 0; i < item.SampleSize; i++)
         {
             var tempfile = $"{prefix}-{i}.json";
             content.Position = 0;
             await destBlobContainer.GetBlobClient(tempfile).UploadAsync(content);
         }
     }
+    
 
     private async Task CopySingle(BlobClient sourceBlob,BlobClient destBlob, string sas)
     {
