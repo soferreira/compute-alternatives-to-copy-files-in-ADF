@@ -79,35 +79,25 @@ public class BlobController : ControllerBase
             if(item.SampleSize > MAX_SAMPLE_SIZE){
                 _logger.LogInformation($"BlobController::Sample size {item.SampleSize} is bigger than threshold {MAX_SAMPLE_SIZE}, dividing by 2 and creating two tasks again.");
                 int newSize = item.SampleSize/2;
-                BlobRequest newItem = new BlobRequest();
-                newItem.CallonUrl = item.CallonUrl;
-                newItem.SourceCS = item.SourceCS;
-                newItem.TargetCS = item.TargetCS;
-                newItem.SourceContainer = item.SourceContainer;
+                BlobRequest newItem = new BlobRequest(item);
                 newItem.SampleSize = newSize;
-                newItem.TargetContainer = item.TargetContainer;
-                newItem.BlobName = item.BlobName;
-                newItem.RequestType = SAMPLE;
                 var CallOnItem = new Func<CancellationToken, ValueTask>(async token =>
                 {
-                    _logger.LogInformation($"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
-                    // do the copy here
                     await CallOn(newItem);
-                    _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
+                    _logger.LogInformation($"BlobController::CopyBlob::Creating samples::Work item CallOn with size {newItem.SampleSize} completed at: {DateTimeOffset.Now}");
    
                 });
                 await _queue.QueueBackgroundWorkItemAsync(CallOnItem);
-                newItem.SampleSize = item.SampleSize - newSize; // remaining size might not be even, so we need to calculate the remaining size
+                BlobRequest newItem2 = new BlobRequest(item);
+                newItem2.SampleSize = item.SampleSize - newSize; // remaining size might not be even, so we need to calculate the remaining size
                 var CallOnItem2 = new Func<CancellationToken, ValueTask>(async token =>
                 {
-                    _logger.LogInformation($"Starting work item {item.RequestType} at: {DateTimeOffset.Now}");
-                    // do the copy here
-                    await CallOn(newItem);
-                    _logger.LogInformation($"Work item {item.RequestType} completed at: {DateTimeOffset.Now}");
+                    await CallOn(newItem2);
+                    _logger.LogInformation($"BlobController::CopyBlob::Creating samples::Work item CallOn with size {newItem2.SampleSize} completed at: {DateTimeOffset.Now}");
    
                 });
                 await _queue.QueueBackgroundWorkItemAsync(CallOnItem2);
-                return Accepted($"Sample task Created: {item.BlobName} with size {item.SampleSize}");
+                return Accepted($"Two Sample tasks Initiated:  with sizes {item.SampleSize} - {newItem.SampleSize}");
             }else{
                 // download the file to a temporary location (sample container)        
                 BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
@@ -137,6 +127,8 @@ public class BlobController : ControllerBase
 
     }
 
+    
+
     private string GenerateString(int length){
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         return new string(Enumerable.Repeat(chars, length)
@@ -146,16 +138,10 @@ public class BlobController : ControllerBase
     private async Task CallOn(BlobRequest item)
     {
         string content = JsonConvert.SerializeObject(item);
-        // log the json content
-        _logger.LogInformation($"json item: {content}");
         HttpClient client = new HttpClient();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
-
-        // HttpResponseMessage response = await client.PostAsJsonAsync($"{item.CallonUrl}/api/blob", content);
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{item.CallonUrl}/api/blob");
-        
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{item.CallonUrl}/api/blob");     
         request.Content = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
-        // _logger.LogInformation($"BlobController::CallOn::Calling {item.CallonUrl}/api/blob with size {item.SampleSize}");
         HttpResponseMessage response = await client.SendAsync(request);
         _logger.LogInformation($"BlobController::CallOn::Response {response.StatusCode} for size {item.SampleSize}");
         client.Dispose();
@@ -163,7 +149,7 @@ public class BlobController : ControllerBase
     private async Task CreateSample(BlobClient localBlob, BlobContainerClient destBlobContainer, BlobRequest item)
     {
         // use the sample file as stream to create multiple files
-        _logger.LogInformation($"BlobController::CreateSample::Creating {item.SampleSize} samples in {item.TargetContainer}.");
+        
         Stream content = localBlob.OpenRead();
         string prefix = GenerateString(5);
         for (int i = 0; i < item.SampleSize; i++)
@@ -172,6 +158,7 @@ public class BlobController : ControllerBase
             content.Position = 0;
             await destBlobContainer.GetBlobClient(tempfile).UploadAsync(content);
         }
+        _logger.LogInformation($"BlobController::CreateSample::Created {item.SampleSize} samples in {item.TargetContainer}.");
     }
     
 

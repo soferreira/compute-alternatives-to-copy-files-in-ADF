@@ -479,3 +479,5 @@ aca/test.rest
 Program.cs.old
 .gitignore
 aca/test.rest
+test/Program.cs
+test/test.csproj

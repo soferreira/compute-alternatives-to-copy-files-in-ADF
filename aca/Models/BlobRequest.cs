@@ -30,5 +30,21 @@ public class BlobRequest
                  string.IsNullOrEmpty(RequestType));
         
     }
+    // empty constructor
+    public BlobRequest() {}
+    
+    // constructor from another BlobRequest
+
+    public BlobRequest(BlobRequest br)
+    {
+        SourceCS = br.SourceCS;
+        TargetCS = br.TargetCS;
+        BlobName = br.BlobName;
+        SourceContainer = br.SourceContainer;
+        TargetContainer = br.TargetContainer;
+        RequestType = br.RequestType;
+        CallonUrl = br.CallonUrl;
+        SampleSize = br.SampleSize;
+    }
     
 }
