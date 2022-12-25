@@ -97,7 +97,7 @@ public class BlobController : ControllerBase
    
                 });
                 await _queue.QueueBackgroundWorkItemAsync(CallOnItem2);
-                return Accepted($"Two Sample tasks Initiated:  with sizes {item.SampleSize} - {newItem.SampleSize}");
+                return Accepted($"Two Sample tasks Initiated:  with sizes {newItem.SampleSize} - {newItem.SampleSize}");
             }else{
                 // download the file to a temporary location (sample container)        
                 BlobContainerClient localBlobClient = new BlobContainerClient(sourceCS,TEMP_LOC);
