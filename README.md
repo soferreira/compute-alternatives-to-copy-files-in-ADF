@@ -80,11 +80,17 @@ Results were taken from the pipeline runs.
 
 ### Azure Integration Runtime
 
+Most common compute option for Azure Data Factory. It is a managed service, which is hosted in Azure. It is used to run the copy activity among many other activities. It is a shared resource, which means that multiple pipelines can use the same Azure Integration Runtime.
+
 ### Azure Container Apps
+
+In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implementing using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files was not considered in the experiment.
 
 ### Self Hosted Integration Runtime
 
-## Experiment results (place holder!)
+The same service can be hosted by customers on thier own compute. Users can create the integration runtime service on stand alone compute, or reuse exsiting capacity. We used dedicated 2 node cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the Self-Hosted IR.
+
+## Experiment results 
 
 We ran each type with multiple number of files to copy. The results are as follows: 
 
