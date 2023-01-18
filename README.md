@@ -50,11 +50,37 @@ An addtion to this use case could be a scenario where data has to be mnoved into
 
 ## Experiment setup
 
+The following resources were created:
+
+- Two storage accounts - source and destination
+
+- Azure Data Factory
+
+- Azure Container Apps - hosting a REST API for copy activity
+
+- Two Azure Data Factory Self-Hosted Integration Runtime nodes we used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
+
+- Managed identity which was used by the Container Apps to access the storage accounts & Key Vault.
+
+- Key Vault - used to store the connection strings for the storage accounts, used by the Container Apps.
+
+While using Self-Hosted Integration Runtime, we did not address full network isolation, as it was not part of the scope of this experiment. 
+
+We created a sample container app, which creates can create the sample files. each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
+
+Few pipelines were created to test the different scenarios. We usede manual trigger for all pipeline executions. The pipelines are as follows:
+
+- Copy Activity - Copying files from source to destination using Copy Activity. We used parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using Azure Data Factory Self-Hosted Integration Runtime.
+
+- Copy using ACA - Copying files from source to destination using a call to web activity to call a REST API. We used parameters to change the source/target of each execution. 
+
+Results were taken from the pipeline runs. 
+
 ## Compute options
 
 ### Azure Integration Runtime
 
-### Azure Data Factory Managed Integration Runtime
+### Azure Container Apps
 
 ### Self Hosted Integration Runtime
 
