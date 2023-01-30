@@ -76,8 +76,8 @@ Few pipelines were created to test the different scenarios. We usede manual trig
 
 Results were taken from the pipeline runs. 
 
-![consumption](images/pipline_consumption.png)
-![details](images/pipline_run_details.png)
+![consumption](/images/pipeline_consumption.png)
+![details](/images/pipeline_run_details.png)
 
 ## Compute options
 
