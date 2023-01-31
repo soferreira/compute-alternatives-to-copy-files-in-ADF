@@ -118,6 +118,7 @@ $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.0
 
 __Using Self Hosted Integration Runtime__
 
+
 $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Total Time[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
 
 XComputeTime is the time taken to run the copy activity on the SHIR nodes. With the VMs we used, the compute time was 0.01 per minute for 2 nodes.
@@ -129,9 +130,9 @@ XComputeTime is the time taken to run the copy activity on the SHIR nodes. With 
 |197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61611444	|197|
 |397|	1|	0.1333	|1	|0.05	|0.060151663	|51.65166333	|249|
 
+
 __Using Managed VNet Integration Runtime__
     
-
 $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
