@@ -1,6 +1,8 @@
 # Copy Alternatives - Research
 
-In this repository, we will compare the various options to __Azure Data Factory__ copy activities. As there are few scenarios where using default values can create challenges with running these pipelines in scale. for each of the options we will run using Azure Integration Runtime, Self Hosted Integration Runtime and Azure Data Factory Managed Integration Runtime. We will review:
+In this repository, we will compare the various compute options we can leverage in a Copy Activity in __Azure Data Factory__. The compute options we will examine are: Azure Integration Runtime, Self Hosted Integration Runtime (SHIR) on Azure VMs and Managed VNet Integration Runtime. It is important to note that we will be copying files between two cloud data stores. If a datastore would have been on-premises it might have made sense to have the SHIR installed on comodity hardware on-premises.
+
+We will review:
 
 - Performance
 
@@ -19,7 +21,7 @@ __What would be covered?__
 
 - Detailed view on the experiment setup.
 
-- Brief overview on the different compute options. (Azure Data Factory Managed Integration Runtime, Self Hosted Integration Runtime, Azure Integration Runtime)
+- Brief overview on the different compute options. (Managed VNet Integration Runtime, SHIR, Azure Integration Runtime)
 
 - Detailed view on the experiment results.
 
@@ -45,7 +47,7 @@ With number of activities run in mind, it is suggested to try and reduce the num
 
 You receive data from multiple sources, all landing on your storage account. You need to move this from the landing zone to your lake. You can use a copy activity to move the data from the landing zone to the lake. You can also use a copy activity to move data from one location to another in the lake. Copy Activity is a very powerful activity that can be used in many scenarios, it is more useful when you have to move data from one location to another in the lake in bulk. 
 
-An addtion to this use case could be a scenario where data has to be mnoved into a virtual network. In such scenarios you will to use either Self Hosted Integration Runtime or Azure Managed Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
+An addtion to this use case could be a scenario where data has to be moved into a virtual network. In such scenarios you will have to use either SHIR or Azure Managed VNet Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
 
 
 ## Experiment setup
@@ -58,19 +60,19 @@ The following resources were created:
 
 - Azure Container Apps - hosting a REST API for copy activity
 
-- Two Azure Data Factory Self-Hosted Integration Runtime nodes we used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
+- Two SHIR nodes we used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
 
 - Managed identity which was used by the Container Apps to access the storage accounts & Key Vault.
 
 - Key Vault - used to store the connection strings for the storage accounts, used by the Container Apps.
 
-While using Self-Hosted Integration Runtime, we did not address full network isolation, as it was not part of the scope of this experiment. 
+While using SHIR, we did not address full network isolation, as it was not part of the scope of this experiment. 
 
-We created a sample container app, which creates can create the sample files. each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
+We created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
 
 Few pipelines were created to test the different scenarios. We usede manual trigger for all pipeline executions. The pipelines are as follows:
 
-- Copy Activity - Copying files from source to destination using Copy Activity. We used parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using Azure Data Factory Self-Hosted Integration Runtime.
+- Copy Activity - Copying files from source to destination using Copy Activity. We used parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is SHIR.
 
 - Copy using ACA - Copying files from source to destination using a call to web activity to call a REST API. We used parameters to change the source/target of each execution. 
 
@@ -83,7 +85,7 @@ Results were taken from the pipeline runs.
 
 ### Azure Integration Runtime
 
-Most common compute option for Azure Data Factory. It is a managed service, which is hosted in Azure. It is used to run the copy activity among many other activities. It is a shared resource, which means that multiple pipelines can use the same Azure Integration Runtime.
+Most common compute option for Azure Data Factory. It is a managed compute, hosted in Azure, that can connect to public datastores. If you need to connect to private datastores, you can whitelist the IP address ranges published for the service, but this is not desirable in many scenarios from a security perspective. It is used to run the copy activity among many other activities. It is a shared resource, which means that multiple pipelines can use the same Azure Integration Runtime.
 
 ### Azure Container Apps
 
@@ -91,7 +93,7 @@ In the context of the experiment, we leveraged Azure Container Apps to create a 
 
 ### Self Hosted Integration Runtime
 
-The same service can be hosted by customers on thier own compute. Users can create the integration runtime service on stand alone compute, or reuse exsiting capacity. We used dedicated 2 node cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the Self-Hosted IR.
+The same service can be hosted by customers on thier own compute. Users can create the integration runtime service on stand alone compute, or reuse exsiting capacity. We used a dedicated 2 nodes cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the SHIR.
 
 ## Experiment results 
 
