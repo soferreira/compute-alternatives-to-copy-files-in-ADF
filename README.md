@@ -89,7 +89,7 @@ Most common compute option for Azure Data Factory. It is a managed compute, host
 
 ### Azure Container Apps
 
-In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implementing using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files was not considered in the experiment.
+In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implementing using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files was not considered in the experiment. __This is the reason we did not include the results for this option in the experiment results.__
 
 ### Self Hosted Integration Runtime
 
@@ -105,67 +105,44 @@ All calculation are based on single run multiply by 1000.
 
 __Using Azure Integration Runtime__
 
-> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.005 +  } $$
+$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.005  } $$
+
+
+| DIU | Activity Duration [sec]| Activity Runs| DIU Hour| Total Cost | Cost per 1000| Total Time [sec]|
+|-----|------------------------|--------------|---------|------------|--------------|-----------------|
+|4|	26|	1|	0.0667|	0.026718056|	17.71805556	|31|
+|4|	42|	1|	0.0667|	0.026738889|	17.73888889	|46|
+|4|	78|	1|	0.1333|	0.043438889|	34.43888889|	82|
+|4|	180|	1	|0.2	|0.060254167	|51.25416667	|183|
+
 
 __Using Self Hosted Integration Runtime__
 
-> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Total Time[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
+$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Total Time[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
 
 XComputeTime is the time taken to run the copy activity on the SHIR nodes. With the VMs we used, the compute time was 0.01 per minute for 2 nodes.
+
+|Activity Duration [sec]| Activity Runs| External Activity Runs| SHIR runs|	X-Compute Cost	|Total Cost| Cost per 1000|	Total Time [sec]|
+|-----------------------|--------------|-----------------------|----------|-----------------|----------|--------------|-----------------|
+|55|	1|	0.0167	|1	|0.01	|0.020032226	|11.53222556	|55|
+|96|	1|	0.0333	|1	|0.02	|0.030056663	|21.55666333	|96|
+|197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61611444	|197|
+|397|	1|	0.1333	|1	|0.05	|0.060151663	|51.65166333	|249|
 
 __Using Managed VNet Integration Runtime__
     
 
-> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
+$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
 
-__The results are as follows:__
+|DIU|	 Activity Duration [sec]|	Activity Runs| 	DIU Hour| Cost per 1000| Total Time [sec]|	Cluster Startup (min)|
+|---|---------------------------|----------------|----------|--------------|-----------------|-----------------------|
+|4|	26|	1|	0.0667|	42.95277778	|31|	1|
+|4|	42|	1|	0.0667|	47.11944444	|46|	1|
+|4|	78|	1|	0.1333|	73.76944444|	82|	1|
+|4	|180	|1	|0.2	|118.5	|183	|1|
 
-### 1000 files
-
-| Experiment Description | DIU  | Activity Runs | External Activity Runs | Total Cost | Total Time |
-|------------------------|------|---------------|------------------------|------------|------------|
-| Azure IR + Copy   | 35   | Male   | 40   | 40   | 40   |
-| Azure IR + ACA | 29   | Female | 30   | 30   | 30   |
-| SHIR + Copy | 42   | Male   | 20   | 20   | 20   |
-| SHIR + ACA | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + Copy | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + ACA | 42   | Male   | 20   | 20   | 20   |
-
-### 2000 files
-
-| Experiment Description | DIU  | Activity Runs | External Activity Runs | Total Cost | Total Time |
-|------------------------|------|---------------|------------------------|------------|------------|
-| Azure IR + Copy   | 35   | Male   | 40   | 40   | 40   |
-| Azure IR + ACA | 29   | Female | 30   | 30   | 30   |
-| SHIR + Copy | 42   | Male   | 20   | 20   | 20   |
-| SHIR + ACA | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + Copy | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + ACA | 42   | Male   | 20   | 20   | 20   |
-
-
-### 5000 files
-
-| Experiment Description | DIU  | Activity Runs | External Activity Runs | Total Cost | Total Time |
-|------------------------|------|---------------|------------------------|------------|------------|
-| Azure IR + Copy   | 35   | Male   | 40   | 40   | 40   |
-| Azure IR + ACA | 29   | Female | 30   | 30   | 30   |
-| SHIR + Copy | 42   | Male   | 20   | 20   | 20   |
-| SHIR + ACA | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + Copy | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + ACA | 42   | Male   | 20   | 20   | 20   |
-
-### 10000 files
-
-| Experiment Description | DIU  | Activity Runs | External Activity Runs | Total Cost | Total Time |
-|------------------------|------|---------------|------------------------|------------|------------|
-| Azure IR + Copy   | 35   | Male   | 40   | 40   | 40   |
-| Azure IR + ACA | 29   | Female | 30   | 30   | 30   |
-| SHIR + Copy | 42   | Male   | 20   | 20   | 20   |
-| SHIR + ACA | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + Copy | 42   | Male   | 20   | 20   | 20   |
-| Managed IR + ACA | 42   | Male   | 20   | 20   | 20   |
 
 
 ## Conclusion
