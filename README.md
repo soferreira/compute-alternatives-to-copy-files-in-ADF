@@ -97,7 +97,30 @@ The same service can be hosted by customers on thier own compute. Users can crea
 
 ## Experiment results 
 
-We ran each type with multiple number of files to copy. The results are as follows: 
+We ran each type with multiple number of files to copy. 
+
+### Cost Calculation
+
+All calculation are based on single run multiply by 1000.
+
+__Using Azure Integration Runtime__
+
+> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.005 +  } $$
+
+__Using Self Hosted Integration Runtime__
+
+> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Total Time[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
+
+XComputeTime is the time taken to run the copy activity on the SHIR nodes. With the VMs we used, the compute time was 0.01 per minute for 2 nodes.
+
+__Using Managed VNet Integration Runtime__
+    
+
+> $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
+
+We have have used the time taken to run the copy activity on the Azure IR.
+
+__The results are as follows:__
 
 ### 1000 files
 
