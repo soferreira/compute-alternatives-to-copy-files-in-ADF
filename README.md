@@ -1,35 +1,30 @@
 # Copy Alternatives - Research
 
-In this repository, we will compare the various compute options we can leverage in a Copy Activity in __Azure Data Factory__. The compute options we will examine are: Azure Integration Runtime, Self Hosted Integration Runtime (SHIR) on Azure VMs and Managed VNet Integration Runtime. It is important to note that we will be copying files between two cloud data stores. If a datastore would have been on-premises it might have made sense to have the SHIR installed on comodity hardware on-premises.
+In this repository, we will compare the various compute options we can leverage to copy files in __Azure Data Factory__. The compute options we will compare are Azure Integration Runtime, Self Hosted Integration Runtime (SHIR) on Azure VMs, and Managed VNet Integration Runtime. It is important to note that we will be copying files between two cloud data stores. If the data store were located on-premises, install the SHIR on commodity hardware on-premises would be more appropriate.
 
-We will review:
+Our comparison will cover into the following aspects:
 
 - Performance
-
 - Cost
-
 - Operational aspects
 
-The alternatives we will cover are:
+The copy alternatives we will cover are:
 
-- Using Azure Data Factory Copy Activity 
-- Using a call to web activity to call a REST API - we will leverage Azure container apps to create a REST API.
+- Using Azure Data Factory Copy Activity
+- Using a Azure Data Factory web activity to call a REST API - we will leverage Azure Container Apps (ACA) to create a REST API.
 
 __What would be covered?__
 
-- The use cases requiring a copy activity.
-
-- Detailed view on the experiment setup.
-
-- Brief overview on the different compute options. (Managed VNet Integration Runtime, SHIR, Azure Integration Runtime)
-
-- Detailed view on the experiment results.
-
-- Conclusion
+- [How does Azure Data Factory cost work.](#how-does-azure-data-factory-cost-works)
+- [Use cases requiring a copy activity.](#use-cases-requiring-a-copy-activity)
+- [Detailed view on the experiment setup.](#experiment-setup)
+- [Brief overview on the different compute options.](#compute-options)
+- [Detailed view on the experiment results.](#experiment-results)
+- [Conclusion](#conclusion)
 
 Ready to get started? Let's go!
 
-## How does Azure Data Factory cost work?
+## How does Azure Data Factory cost works
 
 The [documentation](https://learn.microsoft.com/en-us/azure/data-factory/pricing-concepts) provides a good overview on how the cost* is calculated through examples. The key points are:
 
@@ -37,18 +32,15 @@ The [documentation](https://learn.microsoft.com/en-us/azure/data-factory/pricing
 
 - Compute duration called [DIU](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-performance#data-integration-units)
 
-
 *Cost - covering the pipeline execution and the compute resources used to run the pipeline.
 
 With number of activities run in mind, it is suggested to try and reduce the number of activities in a pipeline. This is because the cost is calculated based on the number of activities run. The more activities you have in a pipeline, the more you will pay. For example if you need to copy 100 files, you can use a single copy activity to copy all 100 files. This will be cheaper than using 100 copy activities to copy 1 file each.
 
 ## Use cases requiring a copy activity
 
+You receive data from multiple sources, all landing on your storage account. You need to move this from the landing zone to your lake. You can use a copy activity to move the data from the landing zone to the lake. You can also use a copy activity to move data from one location to another in the lake. Copy Activity is a very powerful activity that can be used in many scenarios, it is more useful when you have to move data from one location to another in the lake in bulk.
 
-You receive data from multiple sources, all landing on your storage account. You need to move this from the landing zone to your lake. You can use a copy activity to move the data from the landing zone to the lake. You can also use a copy activity to move data from one location to another in the lake. Copy Activity is a very powerful activity that can be used in many scenarios, it is more useful when you have to move data from one location to another in the lake in bulk. 
-
-An addtion to this use case could be a scenario where data has to be moved into a virtual network. In such scenarios you will have to use either SHIR or Azure Managed VNet Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
-
+An addition to this use case could be a scenario where data has to be moved into a virtual network. In such scenarios you will have to use either SHIR or Azure Managed VNet Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
 
 ## Experiment setup
 
@@ -66,17 +58,17 @@ The following resources were created:
 
 - Key Vault - used to store the connection strings for the storage accounts, used by the Container Apps.
 
-While using SHIR, we did not address full network isolation, as it was not part of the scope of this experiment. 
+While using SHIR, we did not address full network isolation, as it was not part of the scope of this experiment.
 
 We created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
 
-Few pipelines were created to test the different scenarios. We usede manual trigger for all pipeline executions. The pipelines are as follows:
+Few pipelines were created to test the different scenarios. We used manual trigger for all pipeline executions. The pipelines are as follows:
 
 - Copy Activity - Copying files from source to destination using Copy Activity. We used parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is SHIR.
 
-- Copy using ACA - Copying files from source to destination using a call to web activity to call a REST API. We used parameters to change the source/target of each execution. 
+- Copy using ACA - Copying files from source to destination using a call to web activity to call a REST API. We used parameters to change the source/target of each execution.
 
-Results were taken from the pipeline runs. 
+Results were taken from the pipeline runs.
 
 ![consumption](/images/pipeline_consumption.png)
 ![details](/images/pipeline_run_details.png)
@@ -95,18 +87,17 @@ In the context of the experiment, we leveraged Azure Container Apps to create a 
 
 The same service can be hosted by customers on thier own compute. Users can create the integration runtime service on stand alone compute, or reuse exsiting capacity. We used a dedicated 2 nodes cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the SHIR.
 
-## Experiment results 
+## Experiment results
 
-We ran each type with multiple number of files to copy. 
+We ran each type with multiple number of files to copy.
 
 ### Cost Calculation
 
 All calculation are based on single run multiply by 1000.
 
-__Using Azure Integration Runtime__
+#### Using Azure Integration Runtime
 
 $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.005  } $$
-
 
 | DIU | Activity Duration [sec]| Activity Runs| DIU Hour| Total Cost | Cost per 1000| Total Time [sec]|
 |-----|------------------------|--------------|---------|------------|--------------|-----------------|
@@ -115,9 +106,7 @@ $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.0
 |4|	78|	1|	0.1333|	0.043438889|	34.43888889|	82|
 |4|	180|	1	|0.2	|0.060254167	|51.25416667	|183|
 
-
-__Using Self Hosted Integration Runtime__
-
+#### Using Self Hosted Integration Runtime
 
 $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Total Time[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
 
@@ -130,9 +119,8 @@ XComputeTime is the time taken to run the copy activity on the SHIR nodes. With 
 |197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61611444	|197|
 |397|	1|	0.1333	|1	|0.05	|0.060151663	|51.65166333	|249|
 
+#### Using Managed VNet Integration Runtime
 
-__Using Managed VNet Integration Runtime__
-    
 $$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
@@ -143,7 +131,5 @@ We have have used the time taken to run the copy activity on the Azure IR.
 |4|	42|	1|	0.0667|	47.11944444	|46|	1|
 |4|	78|	1|	0.1333|	73.76944444|	82|	1|
 |4	|180	|1	|0.2	|118.5	|183	|1|
-
-
 
 ## Conclusion
