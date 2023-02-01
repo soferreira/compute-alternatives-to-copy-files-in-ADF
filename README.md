@@ -30,7 +30,7 @@ The [documentation](https://learn.microsoft.com/en-us/azure/data-factory/pricing
 
 - Orchestrator cost is calculated based on the number of activities and pipelines runs.
 
-- Compute duration called [DIU](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-performance#data-integration-units)
+- Compute duration called [DIU](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-performance#data-integration-units).
 
 *Cost - covering the pipeline execution and the compute resources used to run the pipeline.
 
