@@ -44,11 +44,11 @@ You receive data from multiple sources, which are all are landing in your storag
 
 The following resources were created:
 
-- Two storage accounts - source and destination
+- Two storage accounts - source and destination.
 
-- Azure Data Factory
+- Azure Data Factory.
 
-- Azure Container Apps - hosting a REST API to copy files
+- Azure Container Apps - hosting a REST API to copy files.
 
 - Two SHIR nodes. We used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
     >__NOTE:__ We did not address full network isolation, as it was not part of the scope of this experiment.
