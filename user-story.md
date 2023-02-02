@@ -22,3 +22,10 @@ Cost/1000Runs = ActivityRuns[month] * 1.0 + 1000(DIUHour * 0.002 + Activity Dura
 
 External Activity Runs * 0.0001 + XComputeTime[min] * 0.01) 
 ```
+
+
+```math
+Cost/1000Runs = \\
+ActivityRuns[month] * 1.0 + 1000(DIUHour * 0.002 + Activity Duration[hours] * 0.002 + \\
+External Activity Runs * 0.0001 + XComputeTime[min] * 0.01)
+```
