@@ -46,27 +46,24 @@ The following resources were created:
 
 - Two storage accounts - source and destination.
 
-- Azure Data Factory.
+- Sample data - we created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
+
+- Azure Data Factory- we created multiple pipelines to test the different scenarios. We used manual trigger for all pipeline executions. The pipelines are as follows:
+  - Pipeline using a Copy Activity- Copying files from source to destination using a Copy Activity. We leveraged pipeline parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using SHIR.
+  - Pipeline using a Web Activity - Copying files from source to destination using a Web  Activity + ACA.
 
 - Azure Container Apps - hosting a REST API to copy files.
+    - Copy using ACA - Copying files from source to destination using a Web Activity to call a REST API. We leveraged pipeline parameters to change the source/target of each execution.
+    - TODO: add more details and combine with text bellow
 
-- Two SHIR nodes. We used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
+        (In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results.)
+
+- Two SHIR nodes - We used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
     >__NOTE:__ We did not address full network isolation, as it was not part of the scope of this experiment.
 
 - Managed Identity - used by the Azure Container Apps to access the storage accounts & Key Vault.
 
 - Key Vault - used to store the connection strings for the storage accounts, used by the Container Apps.
-
-We created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers. The source code for the ACA can be fund under the aca folder in this repository.
-
-Few pipelines were created to test the different scenarios. We used manual trigger for all pipeline executions. The pipelines are as follows:
-
-- Copy Activity - Copying files from source to destination using a Copy Activity. We leveraged pipeline parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using SHIR.
-
-- Copy using ACA - Copying files from source to destination using a Web Activity to call a REST API. We leveraged pipeline parameters to change the source/target of each execution.
-    - TODO: add more details and combine with text bellow
-
-        (In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results.)
 
 ## Compute options
 
@@ -95,7 +92,7 @@ All Prices are in USD. We used 'West Europe' as the region for all resources. Pr
 
 #### Using Azure Integration Runtime
 
-##### Copy Activity
+##### Pipeline using a Copy Activity
 
 $$ Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[hours] * 0.005)} $$
 
@@ -106,7 +103,7 @@ $$ Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration
 |5000 Files|4|	78|	1|	0.1333|	0.043|	34.43|
 |10000 Files|4|	180|1|0.2	|0.06|51.25	|
 
-##### Web Activity (ACA)
+##### Pipeline using a Web Activity + ACA
 
 $$ Cost/1000Runs = {ActivityRuns[inThousands/month] * 1000( 1.0 + External Activity Runs* 0.00025 + Activity Duration[hours] * 0.005)} $$
 
@@ -119,8 +116,9 @@ $$ Cost/1000Runs = {ActivityRuns[inThousands/month] * 1000( 1.0 + External Activ
 
 TODO: Add ACA cost or explain why is not included
 
-
 #### Using Self Hosted Integration Runtime
+
+##### Pipeline using a Copy Activity
 
 $$
 Cost/1000Runs = {
@@ -138,16 +136,18 @@ XComputeTime is the time taken to run the copy activity on the SHIR nodes. With 
 
 #### Using Managed VNet Integration Runtime
 
+##### Pipeline using a Copy Activity
+
 $$Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[hours] * 1)} $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
 
-|Experiment|DIU|Activity Duration [sec]|Activity Runs| DIU-Hour| Cost/1000 Runs|Cluster Startup [min]|
+|Experiment|DIU|Activity Duration [sec]|Activity Runs| DIU-Hour| Cost/1000 Runs|Cluster Startup [sec]|
 |----------|---|-----------------------|-------------|---------|-------------------|---------------------|
-|1000 Files|4|	26|	1|	0.0667|	41.56	|	1|
-|2000 Files|4|	42|	1|	0.0667|	46.01|	1|
-|5000 Files|4|	78|	1|	0.1333|	72.66|1|
-|10000 Files|4	|180	|1	|0.2	|117.67|1|
+|1000 Files|4|	26|	1|	0.0667|	41.56	|	60|
+|2000 Files|4|	42|	1|	0.0667|	46.01|	60|
+|5000 Files|4|	78|	1|	0.1333|	72.66|60|
+|10000 Files|4	|180	|1	|0.2	|117.67|60|
 
 ## Conclusion
 
