@@ -64,6 +64,9 @@ Few pipelines were created to test the different scenarios. We used manual trigg
 - Copy Activity - Copying files from source to destination using a Copy Activity. We leveraged pipeline parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using SHIR.
 
 - Copy using ACA - Copying files from source to destination using a Web Activity to call a REST API. We leveraged pipeline parameters to change the source/target of each execution.
+    - TODO: add more details and combine with text bellow
+
+        (In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results.)
 
 ## Compute options
 
@@ -81,10 +84,6 @@ The same service can be hosted by customers on their own compute. Users can crea
 
 TO DO
 
-### Azure Container Apps
-
-In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results.
-
 ## Experiment results
 
 Result values show in the tables bellow were taken from the pipeline run details and consumption.
@@ -96,41 +95,59 @@ All Prices are in USD. We used 'West Europe' as the region for all resources. Pr
 
 #### Using Azure Integration Runtime
 
-$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Activity Duration[hours] * 0.005  } $$
+##### Copy Activity
 
-|Experiment| DIU | Activity Duration [sec]| Activity Runs| DIU Hour| Total Cost | Cost per 1000| Total Time [sec]|
-|----------|-----|------------------------|--------------|---------|------------|--------------|-----------------|
-|1000 Files|4|	26|	1|	0.0667|	0.026718056|	17.71	|31|
-|2000 Files|4|	42|	1|	0.0667|	0.026738889|	17.73	|46|
-|5000 Files|4|	78|	1|	0.1333|	0.043438889|	34.43|	82|
-|10000 Files|4|	180|	1	|0.2	|0.060254167	|51.25	|183|
+$$ Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[hours] * 0.005)} $$
+
+|Experiment|DIU |Activity Duration [sec]|Activity Runs|DIUHour|Cost/Run|Cost/1000 runs|
+|----------|-----|----------------------|-------------|-------|-----|------------------|
+|1000 Files|4|	26|	1|	0.0667|	0.027|	17.71	|
+|2000 Files|4|	42|	1|	0.0667|	0.027|	17.73	|
+|5000 Files|4|	78|	1|	0.1333|	0.043|	34.43|
+|10000 Files|4|	180|1|0.2	|0.06|51.25	|
+
+##### Web Activity (ACA)
+
+$$ Cost/1000Runs = {ActivityRuns[inThousands/month] * 1000( 1.0 + External Activity Runs* 0.00025 + Activity Duration[hours] * 0.005)} $$
+
+|Experiment|Activity Duration [sec]|Activity Runs|External Activity Runs|Cost/Run|Cost/1000 Runs|
+|----------|-----------------------|-------------|----------------------|----|------------------|
+|1000 Files|	14|	1|0.0167|	0.01|	1.02|
+|2000 Files|	14|	1|0.0167|	0.01|	1.02|
+|5000 Files|	14|	1|0.0167|	0.01|	1.02|
+|10000 Files|	14|	1|0.0167|0.01   |   1.02|
+
+TODO: Add ACA cost or explain why is not included
+
 
 #### Using Self Hosted Integration Runtime
 
 $$
-cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Activity Duration [hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
+Cost/1000Runs = {
+ActivityRuns * 1.0 + 1000(DIUHour * 0.002 + Activity Duration[hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01)}
+$$
 
 XComputeTime is the time taken to run the copy activity on the SHIR nodes. With the VMs we used, the compute time was 0.01 per minute for 2 nodes.
 
-|Experiment|Activity Duration [sec]| Activity Runs| External Activity Runs| SHIR runs|	X-Compute Cost	|Total Cost| Cost per 1000|	Total Time [sec]|
-|----------|-----------------------|--------------|-----------------------|----------|-----------------|----------|--------------|-----------------|
-|1000 Files|55|	1|	0.0167	|1	|0.01	|0.020032226	|11.53	|55|
-|2000 Files|96|	1|	0.0333	|1	|0.02	|0.030056663	|21.55	|96|
-|5000 Files|197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61|197|
-|10000 Files|397|	1|	0.1333	|1	|0.05	|0.060151663	|51.73	|249|
+|Experiment|Activity Duration [sec]| Activity Runs| External Activity Runs| SHIR Runs| X-Compute Cost|Cost/Run| Cost/1000 Runs|
+|----------|-----------------------|--------------|-----------------------|----------|---------------|----|-------------------|
+|1000 Files| 55|	1|	0.0167	|1	|0.01	|0.02	|11.53	|
+|2000 Files|96|	1|	0.0333	|1	|0.02	|0.030	|21.55	|
+|5000 Files|197|	1|	0.0667	|1	|0.04	|0.05	|41.61|
+|10000 Files|397|	1|	0.1333	|1	|0.05	|0.06	|51.73	|
 
 #### Using Managed VNet Integration Runtime
 
-$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Activity Duration[hours] * 1  } $$
+$$Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[hours] * 1)} $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
 
-|Experiment|DIU|	 Activity Duration [sec]|	Activity Runs| 	DIU Hour| Cost per 1000| Total Time [sec]|	Cluster Startup (min)|
-|----------|---|---------------------------|----------------|----------|--------------|-----------------|-----------------------|
-|1000 Files|4|	26|	1|	0.0667|	41.56	|31|	1|
-|2000 Files|4|	42|	1|	0.0667|	46.01|46|	1|
-|5000 Files|4|	78|	1|	0.1333|	72.66|	82|	1|
-|10000 Files|4	|180	|1	|0.2	|117.67	|183	|1|
+|Experiment|DIU|Activity Duration [sec]|Activity Runs| DIU-Hour| Cost/1000 Runs|Cluster Startup [min]|
+|----------|---|-----------------------|-------------|---------|-------------------|---------------------|
+|1000 Files|4|	26|	1|	0.0667|	41.56	|	1|
+|2000 Files|4|	42|	1|	0.0667|	46.01|	1|
+|5000 Files|4|	78|	1|	0.1333|	72.66|1|
+|10000 Files|4	|180	|1	|0.2	|117.67|1|
 
 ## Conclusion
 
