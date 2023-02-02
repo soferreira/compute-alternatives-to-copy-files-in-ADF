@@ -89,10 +89,6 @@ In the context of the experiment, we leveraged Azure Container Apps to create a 
 
 Result values show in the tables bellow were taken from the pipeline run details and consumption.
 
-![consumption](/images/pipeline_consumption.png)
-
-![details](/images/pipeline_run_details.png)
-
 ### Cost Calculation
 
 We are showing both the estimated cost per single pipeline run and the cost for 1000 runs of a pipeline in a month.
@@ -100,40 +96,41 @@ All Prices are in USD. We used 'West Europe' as the region for all resources. Pr
 
 #### Using Azure Integration Runtime
 
-$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 0.005  } $$
+$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Activity Duration[hours] * 0.005  } $$
 
 |Experiment| DIU | Activity Duration [sec]| Activity Runs| DIU Hour| Total Cost | Cost per 1000| Total Time [sec]|
 |----------|-----|------------------------|--------------|---------|------------|--------------|-----------------|
-|1000 Files|4|	26|	1|	0.0667|	0.026718056|	17.71805556	|31|
-|2000 Files|4|	42|	1|	0.0667|	0.026738889|	17.73888889	|46|
-|5000 Files|4|	78|	1|	0.1333|	0.043438889|	34.43888889|	82|
-|10000 Files|4|	180|	1	|0.2	|0.060254167	|51.25416667	|183|
+|1000 Files|4|	26|	1|	0.0667|	0.026718056|	17.71	|31|
+|2000 Files|4|	42|	1|	0.0667|	0.026738889|	17.73	|46|
+|5000 Files|4|	78|	1|	0.1333|	0.043438889|	34.43|	82|
+|10000 Files|4|	180|	1	|0.2	|0.060254167	|51.25	|183|
 
 #### Using Self Hosted Integration Runtime
 
-$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Pipeline activity execution [hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
+$$
+cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.002 + Activity Duration [hours] * 0.002 + External Activity Runs * 0.0001 + XComputeTime[min] * 0.01  } $$
 
 XComputeTime is the time taken to run the copy activity on the SHIR nodes. With the VMs we used, the compute time was 0.01 per minute for 2 nodes.
 
 |Experiment|Activity Duration [sec]| Activity Runs| External Activity Runs| SHIR runs|	X-Compute Cost	|Total Cost| Cost per 1000|	Total Time [sec]|
 |----------|-----------------------|--------------|-----------------------|----------|-----------------|----------|--------------|-----------------|
-|1000 Files|55|	1|	0.0167	|1	|0.01	|0.020032226	|11.53222556	|55|
-|2000 Files|96|	1|	0.0333	|1	|0.02	|0.030056663	|21.55666333	|96|
-|5000 Files|197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61611444	|197|
-|10000 Files|397|	1|	0.1333	|1	|0.05	|0.060151663	|51.65166333	|249|
+|1000 Files|55|	1|	0.0167	|1	|0.01	|0.020032226	|11.53	|55|
+|2000 Files|96|	1|	0.0333	|1	|0.02	|0.030056663	|21.55	|96|
+|5000 Files|197|	1|	0.0667	|1	|0.04	|0.050116114	|41.61|197|
+|10000 Files|397|	1|	0.1333	|1	|0.05	|0.060151663	|51.73	|249|
 
 #### Using Managed VNet Integration Runtime
 
-$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Total Time[hours] * 1  } $$
+$$ cost = {ActivityRuns * 1.0 + 1000 * DIUHours * 0.25 + Activity Duration[hours] * 1  } $$
 
 We have have used the time taken to run the copy activity on the Azure IR.
 
 |Experiment|DIU|	 Activity Duration [sec]|	Activity Runs| 	DIU Hour| Cost per 1000| Total Time [sec]|	Cluster Startup (min)|
 |----------|---|---------------------------|----------------|----------|--------------|-----------------|-----------------------|
-|1000 Files|4|	26|	1|	0.0667|	42.95277778	|31|	1|
-|2000 Files|4|	42|	1|	0.0667|	47.11944444	|46|	1|
-|5000 Files|4|	78|	1|	0.1333|	73.76944444|	82|	1|
-|10000 Files|4	|180	|1	|0.2	|118.5	|183	|1|
+|1000 Files|4|	26|	1|	0.0667|	41.56	|31|	1|
+|2000 Files|4|	42|	1|	0.0667|	46.01|46|	1|
+|5000 Files|4|	78|	1|	0.1333|	72.66|	82|	1|
+|10000 Files|4	|180	|1	|0.2	|117.67	|183	|1|
 
 ## Conclusion
 
