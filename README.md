@@ -75,11 +75,11 @@ Most common compute option for Azure Data Factory. It is a managed compute, host
 
 ### Self Hosted Integration Runtime
 
-The same service can be hosted by customers on their own compute. Users can create the integration runtime service on stand alone compute, or reuse existing capacity. In this experience, we used a dedicated 2 nodes cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the SHIR.
+The same service can be hosted by you on your own compute. Users can create the integration runtime service on stand alone compute, or reuse existing capacity. In this experience, we used a dedicated 2 nodes cluster to run the copy activity. We used this [Quickstart](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime) to create all required resources for the SHIR.
 
 ### Managed VNet Integration Runtime
 
-TO DO
+The Managed VNet Integration Runtime is a compute option that is managed and hosted within your virtual network in Azure. This allows you to create private endpoint between the IR and your data store. When choosing the managed VNet IR you get a secure, fully managed, fully isolated, and highly available compute option.
 
 ## Experiment results
 
