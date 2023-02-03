@@ -96,7 +96,7 @@ All Prices are in USD. We used 'West Europe' as the region for all resources. Pr
 
 $$ Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[hours] * 0.005)} $$
 
-|Experiment|DIU |Activity Duration [sec]|Activity Runs|DIUHour|Cost/Run|Cost/1000 runs|
+|Experiment|DIU |Activity Duration [sec]|Activity Runs|DIUHour|Cost/Run|Cost/1000 Runs|
 |----------|-----|----------------------|-------------|-------|-----|------------------|
 |1000 Files|4|	26|	1|	0.0667|	0.027|	17.71	|
 |2000 Files|4|	42|	1|	0.0667|	0.027|	17.73	|
