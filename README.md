@@ -44,22 +44,20 @@ You receive data from multiple sources, which are all are landing in your storag
 
 The following resources were created:
 
-- Two storage accounts - source and destination.
+- Two storage accounts - source and destination. In most cases both would be within the same region.
 
-- Sample data - we created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers.
+- Sample data - we created a sample container app, which can create the sample files. Each file is with the same size of 21KB. We used this to create 1000, 2000, 5000 and 10,000 files containers in our source storage account.
 
-- Azure Data Factory- we created multiple pipelines to test the different scenarios. We used manual trigger for all pipeline executions. The pipelines are as follows:
-  - Pipeline using a Copy Activity- Copying files from source to destination using a Copy Activity. We leveraged pipeline parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using SHIR.
+- Azure Data Factory - we created multiple pipelines to test the different scenarios. We used manual trigger for all pipeline executions. The pipelines are as follows:
+  - Pipeline using a Copy Activity- Copying files from source to destination using a Copy Activity. We leveraged pipeline parameters to change the source/target of each execution. We have two instances of this pipeline, one is using Azure Integration Runtime and the other is using Self Hosted Integration Runtime (SHIR).
   - Pipeline using a Web Activity - Copying files from source to destination using a Web  Activity + ACA.
 
 - Azure Container Apps - hosting a REST API to copy files.
     - Copy using ACA - Copying files from source to destination using a Web Activity to call a REST API. We leveraged pipeline parameters to change the source/target of each execution.
-    - TODO: add more details and combine with text bellow
-
-        (In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the 202 pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results.)
+    - Using an external call, is cost-effective when looping over large number of items with small size. In the context of the experiment, we leveraged Azure Container Apps to create a REST API. The REST API was used to copy files from one location to another. The API was implemented using the __202 Accepted__ pattern and the pipeline was configured to ignore the async response. This means that the time taken to copy the files is not included on the pipeline duration time and it was not considered in the experiment results. Therefore we __did not__ include it in the experiment results.
 
 - Two SHIR nodes - We used a quickstart template to create the nodes. The template can be found [here](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.compute/vms-with-selfhost-integration-runtime). We used Standard _A4 v2 (4 vcpus, 8 GiB memory)_ VMs.
-    >__NOTE:__ We did not address full network isolation, as it was not part of the scope of this experiment.
+    >__NOTE:__ The experiment does not support full network isolation, as it was not part of the scope of this experiment.
 
 - Managed Identity - used by the Azure Container Apps to access the storage accounts & Key Vault.
 
@@ -71,7 +69,7 @@ The following resources were created:
 
 Most common compute option for Azure Data Factory. It is a managed compute, hosted in Azure, that can connect to public data stores. If you need to connect to private data stores, you can whitelist the IP address ranges published for the service, but this is not desirable in many scenarios from a security perspective. It is used to run the copy activity among many other activities. It is a shared resource, which means that multiple pipelines can use the same Azure Integration Runtime.
 
->__NOTE__: If data needs to be copied into a virtual network, we encourage you to use either SHIR or Azure Managed VNet Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
+>__NOTE__: If data needs to be copied into (or from) a virtual network, we encourage you to use either SHIR or Azure Managed VNet Integration Runtime. The Azure Integration Runtime is not supported in a virtual network.
 
 ### Self Hosted Integration Runtime
 
@@ -114,7 +112,7 @@ $$ Cost/1000Runs = {ActivityRuns[inThousands/month] * 1000( 1.0 + External Activ
 |5000 Files|	14|	1|0.0167|	0.01|	1.02|
 |10000 Files|	14|	1|0.0167|0.01   |   1.02|
 
-TODO: Add ACA cost or explain why is not included
+>Note: The cost of the ACA is __not included__ in the experiment results. The pricing calculator can be found [here](https://azure.microsoft.com/en-us/pricing/details/container-apps/).
 
 #### Using Self Hosted Integration Runtime
 
@@ -151,4 +149,10 @@ We have have used the time taken to run the copy activity on the Azure IR.
 
 ## Conclusion
 
-TODO
+The first conclusion is that it is always better to test your hypothesis before reaching to conclusions. Our hypothesis was that using Self-Hosted-Integration-Runtime would be the most cost effective approach. The experiment results shows that this is not always the case.
+
+The second conclusion, is that each workload __must__ be examined individually. When choosing your compute option, you would need to understand the cost elements, extapulate with your data, and choose the best option for your workload.
+
+Yes, in many cases using SHIR is an easy to switch between Azure IR or Managed VNet IR. Using SHIR brings addtional cost factors, and dependant on your company or project, the addtional cost factors are maintaing the SHIR.
+
+In the specific use case of processing large number of individual files, using an activity for that could be less effective than delegating to another compute option such as Azure Container App, or Azure Functions. It does bring coding complexities to the pipeline, but it can be a good option to consider.
