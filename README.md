@@ -1,8 +1,8 @@
 # Research on compute alternatives to copy files in Azure Data Factory
 
-In this repository, we will compare the various compute options we can leverage to copy files in __Azure Data Factory__. The compute options we will compare are Azure Integration Runtime, Self Hosted Integration Runtime (SHIR) on Azure VMs, and Managed VNet Integration Runtime. It is important to note that we will be copying files between two cloud data stores. If the data store were located on-premises, install the SHIR on commodity hardware on-premises would be more appropriate.
+In this repository, we will compare the various compute options we can leverage to copy files in __Azure Data Factory__. The compute options we will compare are Azure Integration Runtime, Self Hosted Integration Runtime (SHIR) on Azure VMs, and Managed VNet Integration Runtime. It is important to note that we will be copying files between two cloud data stores. If the data store were located on-premises, installing the SHIR on commodity hardware on-premises would be more appropriate.
 
-Our comparison will cover into the following aspects:
+Our comparison will cover the following aspects:
 
 - Performance
 - Cost
@@ -11,7 +11,7 @@ Our comparison will cover into the following aspects:
 The copy alternatives we will cover are:
 
 - Using Azure Data Factory Copy Activity
-- Using a Azure Data Factory web activity to call a REST API - we will leverage Azure Container Apps (ACA) to create a REST API.
+- Using a Azure Data Factory Web Activity to call a REST API - we will leverage Azure Container Apps (ACA) to create a REST API.
 
 __What would be covered?__
 
@@ -28,17 +28,17 @@ Ready to get started? Let's go!
 
 The [documentation](https://learn.microsoft.com/en-us/azure/data-factory/pricing-concepts) provides a good overview on how the cost* is calculated through examples. The key points are:
 
-- Orchestrator cost is calculated based on the number of activities and pipelines runs.
+- Orchestrator cost is calculated based on the number of activities and pipeline runs.
 
 - Compute duration called [DIU](https://learn.microsoft.com/en-us/azure/data-factory/copy-activity-performance#data-integration-units).
 
 *Cost - covering the pipeline execution and the compute resources used to run the pipeline.
 
-With number of activities run in mind, it is suggested to try and reduce the number of activities in a pipeline. This is because the cost is calculated based on the number of activities executions. The more activities you have in a pipeline, the more you will pay. For example if you need to copy 100 files, you can use a single copy activity to copy all 100 files. This will be cheaper than using a loop over 100 copy activities to copy 1 file each.
+With number of activities run in mind, it is suggested to try and reduce the number of activities in a pipeline. This is because activity execution time is rounded up to the minute. I.e. if you have an activity that executed in 45 seconds, it will be rounded up to 1 minute for billing purposes. The more activities you have in a pipeline, the more you will pay. For example if you need to copy 100 files, you can use a single copy activity to copy all 100 files. This will be cheaper than using a loop over 100 copy activities to copy 1 file each.
 
 ## Use case
 
-You receive data from multiple sources, which are all are landing in your storage account. You need to copy this data from the landing zone to your data lake.
+You receive data from multiple sources, which are all landing in your storage account. You need to copy this data from the landing zone to your data lake.
 
 ## Experiment setup
 
@@ -81,7 +81,7 @@ The Managed VNet Integration Runtime is a compute option that is managed and hos
 
 ## Experiment results
 
-Result values show in the tables bellow were taken from the pipeline run details and consumption.
+Result values shown in the tables bellow were taken from the pipeline run details and consumption.
 
 ### Cost Calculation
 
