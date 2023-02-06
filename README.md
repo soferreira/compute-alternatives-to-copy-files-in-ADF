@@ -140,19 +140,19 @@ $$Cost/1000Runs = {ActivityRuns * 1.0 + 1000(DIUHour * 0.25 + Activity Duration[
 
 We have have used the time taken to run the copy activity on the Azure IR.
 
-|Experiment|DIU|Activity Duration [sec]|Activity Runs| DIU-Hour| Cost/1000 Runs|Cluster Startup [sec]|
+|Experiment|DIU|Activity Duration [sec]|Activity Runs| DIU-Hour| Cluster Startup [sec]|Cost/1000 Runs|
 |----------|---|-----------------------|-------------|---------|-------------------|---------------------|
-|1000 Files|4|	26|	1|	0.0667|	41.56	|	60|
-|2000 Files|4|	42|	1|	0.0667|	46.01|	60|
-|5000 Files|4|	78|	1|	0.1333|	72.66|60|
-|10000 Files|4	|180	|1	|0.2	|117.67|60|
+|1000 Files|4|	26|	1|	0.0667|60|	41.56	|
+|2000 Files|4|	42|	1|	0.0667|60|	46.01|
+|5000 Files|4|	78|	1|	0.1333|60|	72.66|
+|10000 Files|4	|180	|1	|0.2	|60|117.67|
 
 ## Conclusion
 
 The first conclusion is that it is always better to test your hypothesis before reaching to conclusions. Our hypothesis was that using Self-Hosted-Integration-Runtime would be the most cost effective approach. The experiment results shows that this is not always the case.
 
-The second conclusion, is that each workload __must__ be examined individually. When choosing your compute option, you would need to understand the cost elements, extapulate with your data, and choose the best option for your workload.
+The second conclusion, is that each workload __must__ be examined individually. When choosing your compute option, you would need to understand the cost elements, extrapolate with your data, and choose the best option for your workload.
 
-Yes, in many cases using SHIR is an easy to switch between Azure IR or Managed VNet IR. Using SHIR brings addtional cost factors, and dependant on your company or project, the addtional cost factors are maintaing the SHIR.
+Yes, in many cases using SHIR is an easy to switch between Azure IR or Managed VNet IR. Using SHIR brings additional cost factors, and dependant on your company or project, the additional cost factors are maintaining the SHIR.
 
 In the specific use case of processing large number of individual files, using an activity for that could be less effective than delegating to another compute option such as Azure Container App, or Azure Functions. It does bring coding complexities to the pipeline, but it can be a good option to consider.
